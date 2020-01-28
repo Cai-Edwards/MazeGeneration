@@ -15,8 +15,8 @@ class Maze:
 
             for x in range(self.size):
                 edges = 0b0000
-                if y == 0: edges = edges | 0b1000   
-                if x == 0: edges = edges | 0b0001   
+                if y == 0: edges = edges | 0b1000
+                if x == 0: edges = edges | 0b0001
                 if y == self.size-1: edges = edges | 0b0010
                 if x == self.size-1: edges = edges | 0b0100
                 
@@ -33,26 +33,22 @@ class Node:
         self.x = x
         self.y = y
 
-    def available(self, maze): #REWORK TODO
-        base = format(self.walls &~ self.edges, '04b')
+
+def available(current, maze):
+        base = format(current.walls &~ current.edges, '04b')
         new = 0b0000
 
-        if base[0] == 1 and not maze.maze[self.y+1][self.x].travelled:
-            print("North fine")
+        if base[0] == "1" and not maze.maze[current.y+1][current.x].travelled:
             new = new | 0b1000
-        if base[1] == 1 and not maze.maze[self.y][self.x+1].travelled:
-            print("East fine")
+        if base[1] == "1" and not maze.maze[current.y][current.x+1].travelled:
             new = new | 0b0100
-        if base[2] == 1 and not maze.maze[self.y-1][self.x].travelled:
-            print("South fine")
+        if base[2] == "1" and not maze.maze[current.y-1][current.x].travelled:
             new = new | 0b0010
-        if base[3] == 1 and not maze.maze[self.y][self.x-1].travelled:
+        if base[3] == "1" and not maze.maze[current.y][current.x-1].travelled:
             new = new | 0b0001
 
-        return new
+        return format(new, '04b')
 
-
-#This is broken, cai fix or i angery
 def generate(maze, sx, sy):
 
     nodes = [maze.maze[sy][sx]]
@@ -62,8 +58,13 @@ def generate(maze, sx, sy):
         current_node = nodes[-1]
         current_node.travelled = True
 
-        try:
-            direction = choice([x for x, k in enumerate(current_node.available(maze)) if k == '1'])
+        next_direction = available(current_node, maze)
+        print(next_direction)
+        
+        if next_direction == "0000":
+            nodes.pop()
+        else:
+            direction = choice([x for x, i in enumerate(next_direction) if i == "1"])
 
             if direction == 0: #north
                 current_node.walls = current_node.walls & 0b0111
@@ -86,39 +87,9 @@ def generate(maze, sx, sy):
                 other.walls = other.walls & 0b1011
 
             nodes.append(other)
-
-        except IndexError:
-            nodes.pop()
-        
         visualise(maze)
-        input()
-
     return maze
 
-def oldvisualise(maze):
-    s = ""
-    s+="+" + "--+"*maze.size
-
-    for i in maze.maze:
-        for k in i:
-            if k.walls & 0b0001:
-                s += "|"
-            else:
-                s + " "
-            
-            s+= "  "
-        
-        s += "\n|"
-        for k in i:
-            if k.walls & 0b0010:
-                s += "--"
-            else:
-                s += "  "
-            
-            s += "+"
-        s+="\n"
-
-    print(s)
 
 #new stuff
 pygame.init()
@@ -152,12 +123,5 @@ def visualise(maze):
     clock.tick(3)   #Controls speed of display
     pygame.display.update()
 
-maze = Maze(6)
-while True:
-    visualise(maze)
-    maze.maze[0][0].walls = 0b1011
-    maze.maze[0][1].walls = 0b1110
-    visualise(maze)
-    maze.maze[0][0].walls = 0b1111
-    maze.maze[0][1].walls = 0b1111
+generate(Maze(6), 0, 0)
 print("debugg")
