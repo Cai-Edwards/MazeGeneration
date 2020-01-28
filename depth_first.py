@@ -32,23 +32,21 @@ class Node:
         self.x = x
         self.y = y
 
-    def available(self, maze): #REWORK TODO
-        base = format(self.walls &~ self.edges, '04b')
+
+def available(current, maze):
+        base = format(current.walls &~ current.edges, '04b')
         new = 0b0000
 
-        if base[0] == 1 and not maze.maze[self.y+1][self.x].travelled:
-            print("North fine")
+        if base[0] == "1" and not maze.maze[current.y+1][current.x].travelled:
             new = new | 0b1000
-        if base[1] == 1 and not maze.maze[self.y][self.x+1].travelled:
-            print("East fine")
+        if base[1] == "1" and not maze.maze[current.y][current.x+1].travelled:
             new = new | 0b0100
-        if base[2] == 1 and not maze.maze[self.y-1][self.x].travelled:
-            print("South fine")
+        if base[2] == "1" and not maze.maze[current.y-1][current.x].travelled:
             new = new | 0b0010
-        if base[3] == 1 and not maze.maze[self.y][self.x-1].travelled:
+        if base[3] == "1" and not maze.maze[current.y][current.x-1].travelled:
             new = new | 0b0001
 
-        return new
+        return format(new, '04b')
 
 def generate(maze, sx, sy):
 
@@ -59,8 +57,13 @@ def generate(maze, sx, sy):
         current_node = nodes[-1]
         current_node.travelled = True
 
-        try:
-            direction = choice([x for x, k in enumerate(current_node.available(maze)) if k == '1'])
+        next_direction = available(current_node, maze)
+        print(next_direction)
+        
+        if next_direction == "0000":
+            nodes.pop()
+        else:
+            direction = choice([x for x, i in enumerate(next_direction) if i == "1"])
 
             if direction == 0: #north
                 current_node.walls = current_node.walls & 0b0111
@@ -83,12 +86,6 @@ def generate(maze, sx, sy):
                 other.walls = other.walls & 0b1011
 
             nodes.append(other)
-
-        except IndexError:
-            nodes.pop()
-        
-        visualise(maze)
-        input()
 
     return maze
 
