@@ -193,7 +193,7 @@ def visualise_end(maze, sx, sy, ex, ey, path):
                 
 if __name__ == "__main__":
 
-    s = 30 #Size of the maze
+    s = 50 #Size of the maze
     r = 0.00 #Chance of ANY travelled node beyond being ignored. ie the chance for one node to "break through" a wall is ~4r
     k = True #Visualise the maze being made
     
@@ -214,5 +214,5 @@ if __name__ == "__main__":
     d = pygame.display.set_mode((display_width, display_height), pygame.RESIZABLE)
     pygame.display.set_caption("Depth first maze generation")
 
-    generate(Maze(s), 15, 15, randint(0, s-1), randint(0, s-1), k, r)
+    generate(Maze(s), round(s/2), round(s/2), randint(0, s-1), randint(0, s-1), k, r)
 
