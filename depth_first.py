@@ -34,7 +34,6 @@ class Node:
         self.x = x
         self.y = y
 
-
 def available(current, maze, r):
         base = format(current.walls &~ current.edges, '04b')
         new = 0b0000
@@ -53,7 +52,7 @@ def available(current, maze, r):
 
         return format(new, '04b')
 
-def generate(maze, sx, sy, ex, ey, show, r):
+def generate(maze, sx, sy, ex, ey, show = False, r = 0.0, bias = False, vertical = False, flip = False, filp_chance = 0.1, small = 1, big = 10):
 
     global display_width
     global ratio
@@ -77,33 +76,38 @@ def generate(maze, sx, sy, ex, ey, show, r):
             current_node.travelled = True
             
         next_direction = available(current_node, maze, r)
+
+        if flip == True and random() < flip_chance:
+            vertical = not (vertical)
         
         if next_direction == "0000":
             nodes[-1].removed = True
             nodes.pop()
             
         else:
+            
             direction = [x for x, i in enumerate(next_direction) if i == "1"]
 
-            p = []
-            num = 0
-            for i in direction:
-                if i % 2 == 0:
-                    num += 1
-                else:
-                    num += 10
+            if bias == True:
+                p = []
+                num = 0
+                for i in direction:
+                    if i % 2 == vertical:
+                        num += small
+                    else:
+                        num += big
 
+                for i in direction:
+                    if i % 2 == vertical:
+                        p.append(small/num)
+                    else:
+                        p.append(big/num)
 
-            for i in direction:
-                if i % 2 ==0:
-                    p.append(1/num)
-                else:
-                    p.append(10/num)
-
-            direction = np.random.choice(direction, p=p)
+                direction = np.random.choice(direction, p=p)
+                
+            else:
+                direction = choice(direction)
             
-
-        
             if direction == 0: #north
                 current_node.walls = current_node.walls & 0b0111
                 other = maze.maze[current_node.y-1][current_node.x]
@@ -129,6 +133,7 @@ def generate(maze, sx, sy, ex, ey, show, r):
         if show == True:
             visualise_current(maze, current_node)
 
+    print("Done")
     visualise_end(maze, sx, sy, ex, ey, path)
     
     return maze
@@ -144,7 +149,6 @@ def visualise_current(maze, current_node):
             
             x = (ratio)*node.x
             y = (ratio)*node.y
-
 
             if node.removed == True:
                 pygame.draw.rect(d, blue, (x, y, ratio, ratio))
@@ -227,8 +231,14 @@ def visualise_end(maze, sx, sy, ex, ey, path):
 if __name__ == "__main__":
 
     s = 50 #Size of the maze
-    r = 0.0 #Chance of ANY travelled node beyond being ignored. ie the chance for one node to "break through" a wall is ~4r
-    k = False #Visualise the maze being made
+    break_wall = 0.0 #Chance of ANY travelled node beyond being ignored. ie the chance for one node to "break through" a wall is ~4r
+    show = False #Visualise the maze being made
+    small = 1
+    big = 20
+    vertical = False
+    flip = False
+    flip_chance = 0.01
+    bias = True
     
     pygame.init()
 
@@ -248,5 +258,5 @@ if __name__ == "__main__":
     d = pygame.display.set_mode((display_width, display_height), pygame.RESIZABLE)
     pygame.display.set_caption("Depth first maze generation")
 
-    generate(Maze(s), 0, 0, s-1, s-1, k, r)
+    generate(Maze(s), 0, 0, s-1, s-1, show, break_wall, bias, vertical, flip, flip_chance, small, big)
 
