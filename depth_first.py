@@ -232,7 +232,7 @@ if __name__ == "__main__":
 
     s = 50 #Size of the maze
     break_wall = 0.0 #Chance of ANY travelled node beyond being ignored. ie the chance for one node to "break through" a wall is ~4r
-    show = False #Visualise the maze being made
+    show = True #Visualise the maze being made
     small = 1
     big = 20
     vertical = False
