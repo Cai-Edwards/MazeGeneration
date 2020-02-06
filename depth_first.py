@@ -1,5 +1,6 @@
 from random import choice, randint, random
 import pygame, time
+import numpy as np
 
 class Maze:
     def __init__(self, size):
@@ -29,6 +30,7 @@ class Node:
         self.walls = walls
         self.edges = edges
         self.travelled = False
+        self.removed = False
         self.x = x
         self.y = y
 
@@ -59,6 +61,8 @@ def generate(maze, sx, sy, ex, ey, show, r):
     ratio = round(display_width/maze.size-0.5)
     nodes = [maze.maze[sy][sx]]
 
+    num = 0
+
     while len(nodes) != 0:
         
         current_node = nodes[-1]
@@ -66,7 +70,8 @@ def generate(maze, sx, sy, ex, ey, show, r):
 
         if current_node.x == ex and current_node.y == ey:
             path = [(z.x, z.y) for z in nodes]
-            nodes = nodes[:-3]
+            nodes[-1].removed = True
+            nodes.pop()
             
             current_node = nodes[-1]
             current_node.travelled = True
@@ -74,11 +79,31 @@ def generate(maze, sx, sy, ex, ey, show, r):
         next_direction = available(current_node, maze, r)
         
         if next_direction == "0000":
+            nodes[-1].removed = True
             nodes.pop()
             
         else:
-            direction = choice([x for x, i in enumerate(next_direction) if i == "1"])
+            direction = [x for x, i in enumerate(next_direction) if i == "1"]
 
+            p = []
+            num = 0
+            for i in direction:
+                if i % 2 == 0:
+                    num += 1
+                else:
+                    num += 10
+
+
+            for i in direction:
+                if i % 2 ==0:
+                    p.append(1/num)
+                else:
+                    p.append(10/num)
+
+            direction = np.random.choice(direction, p=p)
+            
+
+        
             if direction == 0: #north
                 current_node.walls = current_node.walls & 0b0111
                 other = maze.maze[current_node.y-1][current_node.x]
@@ -113,13 +138,18 @@ def visualise_current(maze, current_node):
     global ratio
 
     d.fill(white)
+    
     for row in maze.maze:
         for node in row:
             
             x = (ratio)*node.x
             y = (ratio)*node.y
+
+
+            if node.removed == True:
+                pygame.draw.rect(d, blue, (x, y, ratio, ratio))
             
-            if node.walls & 0b1000 and node.y == 0:  #North
+            if node.walls & 0b1000:  #North
                 pygame.draw.line(d, black, (x, y), (x + ratio, y), line_width)
                 
             if node.walls & 0b0100:  #East
@@ -128,11 +158,14 @@ def visualise_current(maze, current_node):
             if node.walls & 0b0010:  #South
                 pygame.draw.line(d, black, (x, y + ratio), (x + ratio, y + ratio), line_width)
                 
-            if node.walls & 0b0001 and node.x == 0:  #West
+            if node.walls & 0b0001:  #West
                 pygame.draw.line(d, black, (x, y), (x, y + ratio), line_width)
                 
             if current_node == node:
                 pygame.draw.rect(d, red, (x, y, ratio, ratio))
+
+            
+                
                 
     pygame.display.update()
 
@@ -194,8 +227,8 @@ def visualise_end(maze, sx, sy, ex, ey, path):
 if __name__ == "__main__":
 
     s = 50 #Size of the maze
-    r = 0.00 #Chance of ANY travelled node beyond being ignored. ie the chance for one node to "break through" a wall is ~4r
-    k = True #Visualise the maze being made
+    r = 0.0 #Chance of ANY travelled node beyond being ignored. ie the chance for one node to "break through" a wall is ~4r
+    k = False #Visualise the maze being made
     
     pygame.init()
 
@@ -205,14 +238,15 @@ if __name__ == "__main__":
     red = (255, 0, 0)
     green = (0, 255, 0)
     black = (0, 0, 0)
+    blue = (64, 224, 208)
 
     line_width = 1
 
-    display_width = 800
-    display_height = 800
+    display_width = 500
+    display_height = 500
 
     d = pygame.display.set_mode((display_width, display_height), pygame.RESIZABLE)
     pygame.display.set_caption("Depth first maze generation")
 
-    generate(Maze(s), round(s/2), round(s/2), randint(0, s-1), randint(0, s-1), k, r)
+    generate(Maze(s), 0, 0, s-1, s-1, k, r)
 
